@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'quizbrain.dart';
 
+QuizBrain quizBrain = QuizBrain();
 void main() => runApp(Quizzler());
 
 class Quizzler extends StatelessWidget {
@@ -20,11 +23,75 @@ class Quizzler extends StatelessWidget {
 }
 
 class QuizPage extends StatefulWidget {
+
   @override
   _QuizPageState createState() => _QuizPageState();
 }
 
+
 class _QuizPageState extends State<QuizPage> {
+
+  List<Icon> scoreKeeper=[];
+
+  void checkAnswer(bool answerPicked){
+
+    bool correctAnswer= quizBrain.getAnswer();
+    setState(() {
+      if (quizBrain.isFinished()==true){
+        int score=quizBrain.returnScore();
+        int total=quizBrain.getTotalNumber();
+        Alert(
+          context: context,
+          //type: AlertType.error,
+          title: "Finished!",
+          desc: "You\'ve reached the end of the quiz."
+              " Your score: $score/$total",
+          buttons: [
+            DialogButton(
+              child: Text(
+                "AGAIN",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+              onPressed: () => Navigator.pop(context),
+              width: 120,
+            )
+          ],
+        ).show();
+        quizBrain.reset();
+        scoreKeeper=[];
+
+
+      }
+
+      else {
+        if (answerPicked==correctAnswer) {
+          print ('User got it right');
+          scoreKeeper.add(Icon(Icons.check, color: Colors.green,));
+          quizBrain.incrementScore();
+
+        }
+        else {
+          print('User got it wrong');
+          scoreKeeper.add(Icon(Icons.close, color: Colors.red));
+        }
+        quizBrain.nextQuestion();
+      }
+
+
+    //The user picked true.
+
+
+
+    });
+  }
+
+//  List<String> Questions=[
+//    'You can lead a cow down stairs but not up stairs.',
+//  'Approximately one quarter of human bones are in the feet.',
+//    'A slug\'s blood is green.'
+//  ];
+//  List<bool> Answers=[false,true,true];
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -37,7 +104,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                'This is where the question text will go.',
+                quizBrain.getQuestionText(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -61,7 +128,16 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                //The user picked true.
+                if (quizBrain.isLastQ()==true){
+                  quizBrain.incrementScore();
+                  checkAnswer(true);
+                }
+                else{
+                  checkAnswer(true);
+                }
+
+
+
               },
             ),
           ),
@@ -79,12 +155,15 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
+                checkAnswer(false);
                 //The user picked false.
               },
             ),
           ),
         ),
-        //TODO: Add a Row here as your score keeper
+        Row(
+            children: scoreKeeper
+        )
       ],
     );
   }
